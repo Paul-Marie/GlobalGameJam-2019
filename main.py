@@ -7,7 +7,7 @@ from sys import argv, stderr, exit
 
 #environ['SDL_VIDEO_WINDOW_POS'] = "-10,-10".format(-100, -100)
 Image = {'Background': pygame.image.load("Ressources/Images/BackgroundTmp.jpg"),
-         'People': pygame.image.load("Ressources/Images/color.gif"),
+         'People': pygame.image.load("Ressources/Images/square.jpg"),
          'Car': 2}
 Sound = {}
 
@@ -20,8 +20,8 @@ class   BadArgumentError(Exception):
 class   Entity():
     """  """
     time = 0
-    def __init__(self, position, image, state, surface,
-        velocity = 0, territory = [], direction = (0, 0)):
+    def __init__(self, position, image, state, surface, velocity = 0,
+        territory = [], direction = (0, 0), type = 0, size = 100):
         """  """
         self.position = position
         self.image = image
@@ -30,6 +30,8 @@ class   Entity():
         self.territory = territory
         self.velocity = velocity
         self.direction = direction
+        self.type = type
+        self.size = size
 
     def display(self, window):
         """  """
@@ -37,7 +39,7 @@ class   Entity():
 
     def update(self, elapsed_time):
         """  """
-        self.time += elapsed_time
+        self.time += elapsed_time + randint(0, 10)
         if (self.position[0] + self.direction[0] > self.territory[0][0]
             and self.position[1] + self.direction[1] > self.territory[0][1]
             and self.position[0] + self.direction[0] < self.territory[1][0]
@@ -51,16 +53,18 @@ class   Entity():
 # Default object class
 class   People(Entity):
     """ Definition of People class """
+    type = 1
+    size = 50
     velocity = 1000
     territory = [(10, 10), (700, 500)]
-    surface = [(0, 0, 250, 250), (250, 0, 250, 250), (0, 250, 250, 250), (250, 250, 250, 250)]
+    surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
     def __init__(self, position = (0, 0), image = Image['People'], state = 0):
         """  """
         position = (randint(self.territory[0][0], self.territory[1][0]),
                     randint(self.territory[0][1], self.territory[1][1]))
         direction = (randint(0, 2) - 1, randint(0, 2) - 1)
-        Entity.__init__(self, position, image, state, self.surface,
-                        self.velocity, self.territory, direction)
+        Entity.__init__(self, position, image, state, self.surface, self.velocity,
+                        self.territory, direction, self.type, self.size)
         self.state = randint(0, 3)
 
     def __repr__(self):
