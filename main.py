@@ -37,14 +37,25 @@ class   Entity():
         """  """
         window.blit(self.image, self.position, self.surface[self.state])
 
-    def update(self, elapsed_time):
+    def update(self, object_list, elapsed_time):
         """  """
+        tmp = []
         self.time += elapsed_time + randint(0, 10)
-        if (self.position[0] + self.direction[0] > self.territory[0][0]
-            and self.position[1] + self.direction[1] > self.territory[0][1]
-            and self.position[0] + self.direction[0] < self.territory[1][0]
-            and self.position[1] + self.direction[1] < self.territory[1][1]):
-            self.position = (self.position[0] + self.direction[0], self.position[1] + self.direction[1])
+        new_pos_x = self.position[0] + self.direction[0]
+        new_pos_y = self.position[1] + self.direction[1]
+        if (new_pos_x > self.territory[0][0] and new_pos_y > self.territory[0][1]
+        and new_pos_x + self.direction[0] < self.territory[1][0]
+        and new_pos_y + self.direction[1] < self.territory[1][1]):
+            for obj in object_list:
+                if (obj is self
+                    or len(list(filter(
+                        lambda x: x in range(new_pos_x, new_pos_x + self.size),
+                        range(obj.position[0], obj.position[0] + obj.size)))) != 0
+                    and len(list(filter(
+                        lambda x: x in range(new_pos_y, new_pos_y + self.size),
+                        range(obj.position[1], obj.position[1] + obj.size)))) != 0):
+                    tmp.append(1)
+        self.position = (new_pos_x, new_pos_y) if tmp == [1] else self.position
         if self.time >= 1000:
             self.direction = (randint(0, 2) - 1, randint(0, 2) - 1)
             self.state = (self.state + 1) % len(self.surface)
@@ -73,13 +84,13 @@ class   People(Entity):
 
 class   Game():
     """  """
-    pygame.init()
-    pygame.mixer.init()
-    pygame.display.set_caption("Kilian tape l'incruste")
-    resolution = (1920, 1080)
     mouse = (0, 0)
     people_list = []
+    resolution = (1920, 1080)
     def __init__(self, state = False):
+        pygame.init()
+        pygame.mixer.init()
+        pygame.display.set_caption("Kilian tape l'incruste")
         self.clock = pygame.time.Clock()
         self.window = pygame.display.set_mode(self.resolution)
         self.state = state
@@ -88,7 +99,7 @@ class   Game():
         """  """
         self.mouse = pygame.mouse.get_pos()
         milliseconds = self.clock.get_time()
-        [people.update(milliseconds) for people in self.people_list]
+        [people.update(self.people_list, milliseconds) for people in self.people_list]
         #[print(people) for people in self.people_list]
         return
 
