@@ -6,6 +6,9 @@ from sys import argv, stderr, exit
 #from os import environ
 
 #environ['SDL_VIDEO_WINDOW_POS'] = "-10,-10".format(-100, -100)
+Dialog = {'': "",
+          '': "",
+          '': ""}
 Image = {'Background': pygame.image.load("Ressources/Images/BackgroundTmp.jpg"),
          'People': pygame.image.load("Ressources/Images/square.jpg"),
          'Car': 2}
