@@ -40,25 +40,27 @@ class   Entity():
         """  """
         window.blit(self.image, self.position, self.surface[self.state])
 
+    def collider(self, new_pos, obj):
+        """ Return 1 if one or many point of the two HitBox's Entity object will collide"""
+        if (new_pos['x'] > self.territory[0][0] and new_pos['y'] > self.territory[0][1]
+        and new_pos['x'] + self.direction[0] < self.territory[1][0]
+        and new_pos['y'] + self.direction[1] < self.territory[1][1]):
+            if (obj is self or len(list(filter(
+                    lambda x: x in range(new_pos['x'], new_pos['x'] + self.size['x']),
+                    range(obj.position[0], obj.position[0] + obj.size['x'])))) != 0
+                and len(list(filter(
+                    lambda y: y in range(new_pos['y'], new_pos['y'] + self.size['y']),
+                    range(obj.position[1], obj.position[1] + obj.size['y'])))) != 0):
+                return 1
+        return 0
+
     def update(self, object_list, elapsed_time):
         """  """
-        tmp = []
         self.time += elapsed_time + randint(0, 10)
-        new_pos_x = self.position[0] + self.direction[0]
-        new_pos_y = self.position[1] + self.direction[1]
-        if (new_pos_x > self.territory[0][0] and new_pos_y > self.territory[0][1]
-        and new_pos_x + self.direction[0] < self.territory[1][0]
-        and new_pos_y + self.direction[1] < self.territory[1][1]):
-            for obj in object_list:
-                if (obj is self
-                    or len(list(filter(
-                        lambda x: x in range(new_pos_x, new_pos_x + self.size),
-                        range(obj.position[0], obj.position[0] + obj.size)))) != 0
-                    and len(list(filter(
-                        lambda x: x in range(new_pos_y, new_pos_y + self.size),
-                        range(obj.position[1], obj.position[1] + obj.size)))) != 0):
-                    tmp.append(1)
-        self.position = (new_pos_x, new_pos_y) if tmp == [1] else self.position
+        new_pos = {'x': self.position[0] + self.direction[0],
+                   'y': self.position[1] + self.direction[1]}
+        if sum([self.collider(new_pos, obj) for obj in object_list]) == 1:
+            self.position = (new_pos['x'], new_pos['y'])
         if self.time >= 1000:
             self.direction = (randint(0, 2) - 1, randint(0, 2) - 1)
             self.state = (self.state + 1) % len(self.surface)
@@ -68,8 +70,8 @@ class   Entity():
 class   People(Entity):
     """ Definition of People class """
     type = 1
-    size = 50
     velocity = 1000
+    size = {'x': 50, 'y': 50}
     territory = [(10, 10), (700, 500)]
     surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
     def __init__(self, position = (0, 0), image = Image['People'], state = 0):
@@ -77,6 +79,27 @@ class   People(Entity):
         position = (randint(self.territory[0][0], self.territory[1][0]),
                     randint(self.territory[0][1], self.territory[1][1]))
         direction = (randint(0, 2) - 1, randint(0, 2) - 1)
+        Entity.__init__(self, position, image, state, self.surface, self.velocity,
+                        self.territory, direction, self.type, self.size)
+        self.state = randint(0, 3)
+
+    def __repr__(self):
+        return "[position: {}\tstate: {}\ttime: {}\tdirection: {}]".format(
+            self.position, self.state, self.time, self.direction)
+
+# Default object class
+class   Car(Entity):
+    """ Definition of People class """
+    type = 2
+    velocity = 2000
+    size = {'x': 250, 'y': 100}
+    #territory = [(10, 10), (700, 500)]
+    #surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
+    def __init__(self, position = (0, 0), image = Image['Car'], state = 0):
+        """  """
+        #position = (randint(self.territory[0][0], self.territory[1][0]),
+        #            randint(self.territory[0][1], self.territory[1][1]))
+        #direction = (randint(0, 2) - 1, randint(0, 2) - 1)
         Entity.__init__(self, position, image, state, self.surface, self.velocity,
                         self.territory, direction, self.type, self.size)
         self.state = randint(0, 3)
