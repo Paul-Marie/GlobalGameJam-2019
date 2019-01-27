@@ -11,6 +11,7 @@ Dialog = {'': "",
           '': ""}
 Image = {'Background': pygame.image.load("Ressources/Images/BackgroundTmp.jpg"),
          'People': pygame.image.load("Ressources/Images/square.jpg"),
+         'Player': pygame.image.load("Ressources/Images/Player.png"),
          'Car': 2}
 Sound = {}
 
@@ -23,6 +24,7 @@ class   BadArgumentError(Exception):
 class   Entity():
     """  """
     time = 0
+    speed = 0
     def __init__(self, position, image, state, surface, velocity = 0,
         territory = [], direction = (0, 0), type = 0, size = 100):
         """  """
@@ -57,19 +59,61 @@ class   Entity():
     def update(self, object_list, elapsed_time):
         """  """
         self.time += elapsed_time + randint(0, 10)
-        new_pos = {'x': self.position[0] + self.direction[0],
-                   'y': self.position[1] + self.direction[1]}
+        new_pos = {'x': self.position[0] + self.speed * self.direction[0],
+                   'y': self.position[1] + self.speed * self.direction[1]}
         if sum([self.collider(new_pos, obj) for obj in object_list]) == 1:
             self.position = (new_pos['x'], new_pos['y'])
-        if self.time >= 1000:
-            self.direction = (randint(0, 2) - 1, randint(0, 2) - 1)
-            self.state = (self.state + 1) % len(self.surface)
+        if self.time >= self.velocity:
+            if self.type != 0:
+                self.direction = (randint(0, 2) - 1, randint(0, 2) - 1)
+                self.state = (self.state + 1) % len(self.surface)
+            else:
+                if self.direction != (0, 0):
+                    self.state = (self.state + 1) % len(self.surface)
             self.time = 0
+
+# Default object class
+class   Player(Entity):
+    """ Definition of People class """
+    type = 0
+    speed = 2
+    velocity = 500
+    orientation = 'back'
+    size = {'x': 50, 'y': 50}
+    territory = [(0, 0), (1920, 1080)]
+    surface = {'up': [(0, 0, 50, 50), (50, 0, 50, 50), (100, 0, 50, 50), (150, 0, 50, 50)],
+        'back': [(0, 50, 50, 50), (50, 50, 50, 50), (100, 50, 50, 50), (150, 50, 50, 50)],
+        'left': [(0, 100, 50, 50), (50, 100, 50, 50), (100, 100, 50, 50), (150, 100, 50, 50)],
+        'right': [(0, 150, 50, 50), (50, 150, 50, 50), (100, 150, 50, 50), (150, 150, 50, 50)]}
+    def __init__(self, position = (1300, 1000), image = Image['Player'], state = 0):
+        """  """
+        direction = (0, 0)
+        self.position = position
+        state = 0
+        Entity.__init__(self, self.position, image, state, self.surface, self.velocity,
+                        self.territory, direction, self.type, self.size)
+
+    def display(self, window):
+        """  """
+        window.blit(self.image, self.position, self.surface[self.orientation][self.state])
+
+    def update(self, object_list, elapsed_time):
+        """  """
+        Entity.update(self, object_list + [self], elapsed_time)
+        if self.direction[1] != 0:
+            self.orientation = ['back', 'back', 'up'][self.direction[1] + 1]
+        if self.direction[0] != 0:
+            self.orientation = ['left', 'back', 'right'][self.direction[0] + 1]
+
+    def __repr__(self):
+        return "[position: {}\tstate: {}\ttime: {}\tdirection: {}\torientation: {}]".format(
+            self.position, self.state, self.time, self.direction, self.orientation)
 
 # Default object class
 class   People(Entity):
     """ Definition of People class """
     type = 1
+    speed = 1
     velocity = 1000
     size = {'x': 50, 'y': 50}
     territory = [(10, 10), (700, 500)]
@@ -91,7 +135,7 @@ class   People(Entity):
 class   Car(Entity):
     """ Definition of People class """
     type = 2
-    velocity = 2000
+    velocity = 500
     size = {'x': 250, 'y': 100}
     #territory = [(10, 10), (700, 500)]
     #surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
@@ -112,6 +156,7 @@ class   Game():
     """  """
     mouse = (0, 0)
     people_list = []
+    player = Player()
     resolution = (1920, 1080)
     def __init__(self, state = False):
         pygame.init()
@@ -125,7 +170,9 @@ class   Game():
         """  """
         self.mouse = pygame.mouse.get_pos()
         milliseconds = self.clock.get_time()
-        [people.update(self.people_list, milliseconds) for people in self.people_list]
+        [people.update(self.people_list + [self.player], milliseconds)
+         for people in self.people_list + [self.player]]
+        self.player.update(self.people_list, milliseconds)
         #[print(people) for people in self.people_list]
         return
 
@@ -133,17 +180,26 @@ class   Game():
         """  """
         self.window.blit(Image['Background'], (0, 0))
         [people.display(self.window) for people in self.people_list]
+        self.player.display(self.window)
         #[car.display(self.window) for car in self.car_list]
         #[object.display(self.window) for object in self.object_list]
         pygame.display.update()
         return
 
+    def handleEvent(self, event):
+        """  """
+        if event.type == pygame.QUIT:
+            self.state = True
+        if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
+            keys = pygame.key.get_pressed()
+            self.player.direction = (-keys[pygame.K_LEFT] + keys[pygame.K_RIGHT],
+                                     -keys[pygame.K_UP] + keys[pygame.K_DOWN])
+
     def gameHandler(self):
         """  """
         while not self.state:
             for event in pygame.event.get():
-                if event.type == pygame.QUIT:
-                    self.state = True
+                self.handleEvent(event)
             self.clock.tick(60)
             self.checkAction()
             self.display()
