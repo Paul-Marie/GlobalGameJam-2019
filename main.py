@@ -22,12 +22,12 @@ class   BadArgumentError(Exception):
         self.errors = errors
 
 class   Entity():
-    """  """
+    """ An 'Entity' is an object who can interact with other pair """
     time = 0
     speed = 0
     def __init__(self, position, image, state, surface, velocity = 0,
         territory = [], direction = (0, 0), type = 0, size = 100):
-        """  """
+        """ Instanciate an 'Entity' """
         self.position = position
         self.image = image
         self.state = state
@@ -39,7 +39,7 @@ class   Entity():
         self.size = size
 
     def display(self, window):
-        """  """
+        """ Display an 'Entity' sprite onto the 'window' """
         window.blit(self.image, self.position, self.surface[self.state])
 
     def collider(self, new_pos, obj):
@@ -57,7 +57,7 @@ class   Entity():
         return 0
 
     def update(self, object_list, elapsed_time):
-        """  """
+        """ Update the object' sprite and position """
         self.time += elapsed_time + randint(0, 10)
         new_pos = {'x': self.position[0] + self.speed * self.direction[0],
                    'y': self.position[1] + self.speed * self.direction[1]}
@@ -72,9 +72,8 @@ class   Entity():
                     self.state = (self.state + 1) % len(self.surface)
             self.time = 0
 
-# Default object class
 class   Player(Entity):
-    """ Definition of People class """
+    """ Definition of Player class """
     type = 0
     speed = 2
     velocity = 500
@@ -86,7 +85,7 @@ class   Player(Entity):
         'left': [(0, 100, 50, 50), (50, 100, 50, 50), (100, 100, 50, 50), (150, 100, 50, 50)],
         'right': [(0, 150, 50, 50), (50, 150, 50, 50), (100, 150, 50, 50), (150, 150, 50, 50)]}
     def __init__(self, position = (1300, 1000), image = Image['Player'], state = 0):
-        """  """
+        """ Instanciate a player """
         direction = (0, 0)
         self.position = position
         state = 0
@@ -94,11 +93,11 @@ class   Player(Entity):
                         self.territory, direction, self.type, self.size)
 
     def display(self, window):
-        """  """
+        """ Overload  'Entity.update' to use the 'Player.orientation' """
         window.blit(self.image, self.position, self.surface[self.orientation][self.state])
 
     def update(self, object_list, elapsed_time):
-        """  """
+        """ update the 'Player' object and assign it his sprite """
         Entity.update(self, object_list + [self], elapsed_time)
         if self.direction[1] != 0:
             self.orientation = ['back', 'back', 'up'][self.direction[1] + 1]
@@ -111,7 +110,7 @@ class   Player(Entity):
 
 # Default object class
 class   People(Entity):
-    """ Definition of People class """
+    """ A 'People' is an 'Entity' who move randomly and 'Player' can interact with """
     type = 1
     speed = 1
     velocity = 1000
@@ -119,7 +118,7 @@ class   People(Entity):
     territory = [(10, 10), (700, 500)]
     surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
     def __init__(self, position = (0, 0), image = Image['People'], state = 0):
-        """  """
+        """ Inititalise 'People' object at a random 'position' / 'direction' """
         position = (randint(self.territory[0][0], self.territory[1][0]),
                     randint(self.territory[0][1], self.territory[1][1]))
         direction = (randint(0, 2) - 1, randint(0, 2) - 1)
@@ -133,14 +132,14 @@ class   People(Entity):
 
 # Default object class
 class   Car(Entity):
-    """ Definition of People class """
+    """ A 'Car' is an 'Entity' who spawn randomly from one point, move on the round about and leave """
     type = 2
     velocity = 500
     size = {'x': 250, 'y': 100}
     #territory = [(10, 10), (700, 500)]
     #surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
     def __init__(self, position = (0, 0), image = Image['Car'], state = 0):
-        """  """
+        """ Initialise 'Car' object and spawn it at one of the two available 'spawn_point' """
         #position = (randint(self.territory[0][0], self.territory[1][0]),
         #            randint(self.territory[0][1], self.territory[1][1]))
         #direction = (randint(0, 2) - 1, randint(0, 2) - 1)
@@ -153,12 +152,13 @@ class   Car(Entity):
             self.position, self.state, self.time, self.direction)
 
 class   Game():
-    """  """
+    """ 'Game' is our motor, who perform each object move and display """
     mouse = (0, 0)
     people_list = []
     player = Player()
     resolution = (1920, 1080)
     def __init__(self, state = False):
+        """ Create the game by initialising pygame with a 'window' and 'clock' """
         pygame.init()
         pygame.mixer.init()
         pygame.display.set_caption("Kilian tape l'incruste")
@@ -167,7 +167,7 @@ class   Game():
         self.state = state
 
     def checkAction(self):
-        """  """
+        """ Perform an 'update' on each object """
         self.mouse = pygame.mouse.get_pos()
         milliseconds = self.clock.get_time()
         [people.update(self.people_list + [self.player], milliseconds)
@@ -177,7 +177,7 @@ class   Game():
         return
 
     def display(self):
-        """  """
+        """ display each object on the screen """
         self.window.blit(Image['Background'], (0, 0))
         [people.display(self.window) for people in self.people_list]
         self.player.display(self.window)
@@ -187,7 +187,7 @@ class   Game():
         return
 
     def handleEvent(self, event):
-        """  """
+        """ Get the list of all events occured, and update 'player''s direction """
         if event.type == pygame.QUIT:
             self.state = True
         if event.type == pygame.KEYDOWN or event.type == pygame.KEYUP:
@@ -196,7 +196,7 @@ class   Game():
                                      -keys[pygame.K_UP] + keys[pygame.K_DOWN])
 
     def gameHandler(self):
-        """  """
+        """ Handle the game """
         while not self.state:
             for event in pygame.event.get():
                 self.handleEvent(event)
@@ -206,7 +206,7 @@ class   Game():
         return
 
     def startMenu(self, menu_number):
-        """  """
+        """ Start a menu (ON HOLD) """
         if menu_number == 1:
             [self.people_list.append(People()) for i in range(0, 6)]
             #[self.car_list.append(People()) for i in range(0, 6)]
@@ -215,9 +215,7 @@ class   Game():
 
 # Do not put more information in this function, it's must be clearer as possible
 def     main():
-    """ Main function who perform program's core action like arguments resolution """
     game = Game()
-    #game.menu()
     game.startMenu(1)
     game.gameHandler()
     pygame.quit()
