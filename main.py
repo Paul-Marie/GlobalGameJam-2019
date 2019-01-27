@@ -4,9 +4,7 @@ import pygame
 from math import radians, cos, sin, tan, pi
 from random import randint, choice
 from sys import argv, stderr, exit
-#from os import environ
 
-#environ['SDL_VIDEO_WINDOW_POS'] = "-10,-10".format(-100, -100)
 Dialog = {'': "",
           '': "",
           '': ""}
@@ -67,7 +65,7 @@ class   Entity():
         if self.time >= self.velocity + randint(-10, 10):
             if self.type == 1:
                 self.direction = (randint(0, 2) - 1, randint(0, 2) - 1)
-                self.state = (self.state + 1) % len(self.surface)
+                self.state = (self.state + 1) % len(self.surface['up'])
             elif self.type == 0:
                 if self.direction != (0, 0):
                     self.state = (self.state + 1) % len(self.surface)
@@ -85,7 +83,7 @@ class   Player(Entity):
         'back': [(0, 50, 50, 50), (50, 50, 50, 50), (100, 50, 50, 50), (150, 50, 50, 50)],
         'left': [(0, 100, 50, 50), (50, 100, 50, 50), (100, 100, 50, 50), (150, 100, 50, 50)],
         'right': [(0, 150, 50, 50), (50, 150, 50, 50), (100, 150, 50, 50), (150, 150, 50, 50)]}
-    def __init__(self, position = (1300, 1000), image = Image['Player'], state = 0):
+    def __init__(self, position = (1200, 1000), image = Image['Player'], state = 0):
         """ Instanciate a player """
         direction = (0, 0)
         self.position = position
@@ -114,9 +112,13 @@ class   People(Entity):
     type = 1
     speed = 1
     velocity = 1000
+    orientation = 'back'
     size = {'x': 50, 'y': 50}
-    territory = [(10, 10), (700, 500)]
-    surface = [(0, 0, 49, 49), (51, 0, 49, 49), (0, 51, 49, 49), (51, 51, 49, 49)]
+    territory = [(260, 260), (1000, 600)]
+    surface = {'up': [(0, 0, 50, 50), (50, 0, 50, 50), (100, 0, 50, 50)],
+               'left': [(0, 50, 50, 50), (50, 50, 50, 50), (100, 50, 50, 50)],
+               'right': [(0, 100, 50, 50), (50, 100, 50, 50), (100, 100, 50, 50)],
+               'back': [(0, 150, 50, 50), (50, 150, 50, 50), (100, 150, 50, 50)]}
     def __init__(self, position = (0, 0), image = Image['People'], state = 0):
         """ Inititalise 'People' object at a random 'position' / 'direction' """
         position = (randint(self.territory[0][0], self.territory[1][0]),
@@ -124,13 +126,20 @@ class   People(Entity):
         direction = (randint(0, 2) - 1, randint(0, 2) - 1)
         Entity.__init__(self, position, image, state, self.surface, self.velocity,
                         self.territory, direction, self.type, self.size)
-        self.state = randint(0, len(self.surface) - 1)
+        self.state = randint(0, len(self.surface['up']) - 1)
+
+    def display(self, window):
+        """ Overload  'Entity.update' to use the 'Player.orientation' """
+        if self.direction[1] != 0:
+            self.orientation = ['back', 'back', 'up'][self.direction[1] + 1]
+        if self.direction[0] != 0:
+            self.orientation = ['left', 'back', 'right'][self.direction[0] + 1]
+        window.blit(self.image, self.position, self.surface[self.orientation][self.state])
 
     def __repr__(self):
         return "[position: {}\tstate: {}\ttime: {}\tdirection: {}]".format(
             self.position, self.state, self.time, self.direction)
 
-# Default object class
 class   Car(Entity):
     """ A 'Car' is an 'Entity' who spawn randomly from one point, move on the round about and leave """
     type = 2
@@ -154,13 +163,12 @@ class   Car(Entity):
         """   """
         radius = 200
         self.angle = increment * (pi / (360 / 2));
-        new_pos = {'x': int(1300 + (radius * cos(self.angle))),
-                   'y': int(500 + (radius * sin(self.angle)))};
-        rotation = [45, -45, -45, -45, -45, 45, 0, 0, 0]
-        if increment % 45 == 0:
+        new_pos = {'x': int(1400 + (radius * cos(self.angle))),
+                   'y': int(600 + (radius * sin(self.angle)))};
+        if increment % 180 == 0:
             tmp = self.image.get_rect().center
             self.image = pygame.transform.rotate(
-                self.image, rotation[(int(increment / 45) - 2) % len(rotation)])
+                self.image, -90)
             self.image.get_rect().center = tmp
         self.position = (new_pos['x'], new_pos['y'])
 
@@ -202,8 +210,7 @@ class   Game():
         """ Perform an 'update' on each object """
         self.mouse = pygame.mouse.get_pos()
         milliseconds = self.clock.get_time()
-        if randint(0, 100) == 5:
-            print("Car() created !")
+        if randint(0, 200) == 1:
             self.object_list.append(Car())
         [obj.update(self.object_list + [self.player], milliseconds)
          for obj in self.object_list + [self.player]]
@@ -252,8 +259,8 @@ def     main():
 
 # Don't touch at this except if u don't worry of problems
 if __name__ == "__main__":
-    #try:
-    main()
-    #except BaseException as error:
-    #    stderr.write(str(type(error).__name__) + ": {}\n".format(error))
-    #    exit(84)
+    try:
+        main()
+    except BaseException as error:
+        stderr.write(str(type(error).__name__) + ": {}\n".format(error))
+        exit(84)
